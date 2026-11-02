@@ -1,0 +1,3 @@
+import type {LogSourceAdapter,SourceContext} from '@logscope/core';
+export interface WebSocketConfig {url:string;protocols?:string[]}
+export class WebSocketAdapter implements LogSourceAdapter<WebSocketConfig>{readonly type='websocket';private ws?:WebSocket;async connect(cfg:WebSocketConfig,ctx:SourceContext){const ws=new WebSocket(cfg.url,cfg.protocols);this.ws=ws;ws.onopen=()=>ctx.setStatus('connected');ws.onmessage=e=>{try{ctx.emit([JSON.parse(e.data)])}catch{ctx.emit([e.data] as unknown[])}};ws.onerror=()=>ctx.onError(new Error('WebSocket connection error'));ws.onclose=()=>ctx.setStatus('disconnected');ctx.signal.addEventListener('abort',()=>ws.close(),{once:true})}async disconnect(){this.ws?.close()}}

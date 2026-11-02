@@ -1,0 +1,24 @@
+{
+  "name": "logscope-monorepo",
+  "private": true,
+  "version": "1.0.0-alpha.1",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev -w @logscope/playground",
+    "build": "npm run build:packages && npm run build -w @logscope/playground",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test -w @logscope/core",
+    "build:packages": "npm run build -w @logscope/core && npm run build -w @logscope/adapter-rest && npm run build -w @logscope/adapter-sse && npm run build -w @logscope/adapter-websocket && npm run build -w @logscope/react",
+    "clean": "node scripts/clean.mjs"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "tsup": "^8.3.5",
+    "vite": "^6.1.0",
+    "vitest": "^2.1.8"
+  }
+}

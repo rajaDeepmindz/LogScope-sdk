@@ -1,0 +1,3 @@
+import type {LogSourceAdapter,SourceContext} from '@logscope/core';
+export interface SSEConfig {url:string;withCredentials?:boolean}
+export class SSEAdapter implements LogSourceAdapter<SSEConfig>{readonly type='sse';private stream?:EventSource;async connect(cfg:SSEConfig,ctx:SourceContext){const s=new EventSource(cfg.url,{withCredentials:cfg.withCredentials});this.stream=s;s.onopen=()=>ctx.setStatus('connected');s.onmessage=e=>{try{ctx.emit([JSON.parse(e.data)])}catch{ctx.emit([e.data])}};s.onerror=()=>ctx.onError(new Error('SSE connection error'));ctx.signal.addEventListener('abort',()=>s.close(),{once:true})}async disconnect(){this.stream?.close()}}
