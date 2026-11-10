@@ -17,5 +17,6 @@ export default defineConfig({
       { find: '@logscope/adapter-websocket', replacement: workspace('../../packages/adapter-websocket/src/index.ts') },
     ],
   },
+  build: { outDir: 'dist/client' },
   server: { port: 5173 },
 });
