@@ -90,3 +90,149 @@ body,
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.studio .header {
+  gap: 10px;
+  padding: 5px clamp(10px, 2vw, 24px);
+}
+
+.studio .identity {
+  gap: 7px;
+}
+
+.studio .identity .logo {
+  width: 29px;
+  height: 29px;
+  border-radius: 8px;
+}
+
+.studio .identity .logo svg {
+  width: 16px;
+  height: 16px;
+}
+
+.studio .identity b {
+  font-size: 15px;
+}
+
+.studio .identity small {
+  font-size: 8px;
+}
+
+.studio .header-actions {
+  gap: 7px;
+}
+
+.studio .theme-switch {
+  gap: 3px;
+  padding: 3px;
+}
+
+.studio .theme-switch button {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+}
+
+.studio .theme-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.studio .theme-switch button.active {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--accent);
+}
+
+.studio .header .primary {
+  padding: 6px 10px;
+  border-radius: 7px;
+}
+
+.studio .log-scroll {
+  resize: vertical;
+  min-height: 180px;
+  max-height: 75vh;
+  cursor: default;
+}
+
+.studio .primary,
+.studio .segmented button.active,
+.studio .mini.active {
+  background: linear-gradient(110deg, var(--accent), var(--accent2));
+}
+
+.studio.ocean {
+  --bg: #0b141c;
+  --surface: #111f2a;
+  --surface2: #192b38;
+  --border: #2a4354;
+  --fg: #eef8ff;
+  --muted: #9ab0bf;
+  --accent: #38a9e8;
+  --accent2: #3775d6;
+  --selected: #173c55;
+  --good: #4fd1b0;
+  --bad: #ff8296;
+  --warn: #f3c06b;
+}
+
+.studio.forest {
+  --bg: #0d1712;
+  --surface: #14221a;
+  --surface2: #1d3024;
+  --border: #304b38;
+  --fg: #f0fff4;
+  --muted: #a0b7a5;
+  --accent: #36b783;
+  --accent2: #438ed0;
+  --selected: #1d4130;
+  --good: #5bdda3;
+  --bad: #ff8792;
+  --warn: #f2c56e;
+}
+
+.studio.sunset {
+  --bg: #fff8f1;
+  --surface: #ffffff;
+  --surface2: #fff0e2;
+  --border: #eed8c5;
+  --fg: #3b2b22;
+  --muted: #88766a;
+  --accent: #e88745;
+  --accent2: #d65b69;
+  --selected: #ffe6d4;
+  --good: #218c67;
+  --bad: #c83d54;
+  --warn: #996018;
+}
+
+.studio.rose {
+  --bg: #1a1117;
+  --surface: #251820;
+  --surface2: #34212d;
+  --border: #503446;
+  --fg: #fff3f7;
+  --muted: #c2a8b4;
+  --accent: #ed7190;
+  --accent2: #a478e8;
+  --selected: #492537;
+  --good: #58d1a2;
+  --bad: #ff8e9b;
+  --warn: #f0c071;
+}
+
+@media (max-width: 480px) {
+  .studio .header {
+    padding-inline: 8px;
+  }
+
+  .studio .status-dot {
+    display: none;
+  }
+
+  .studio .theme-switch button {
+    width: 18px;
+    height: 18px;
+  }
+}

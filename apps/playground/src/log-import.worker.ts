@@ -15,6 +15,7 @@ type ImportResponse =
   | { type: "batch"; events: ImportEvent[] }
   | { type: "progress"; count: number }
   | { type: "imported"; count: number; retained: number }
+  | { type: "save-progress"; saved: number; total: number }
   | { type: "saved" }
   | { type: "save-error"; message: string }
   | { type: "error"; message: string };
@@ -110,6 +111,11 @@ self.onmessage = async (event: MessageEvent<ImportRequest>) => {
     try {
       for (let index = 0; index < retained.length; index += 5000) {
         await writeHistory(retained.slice(index, index + 5000));
+        self.postMessage({
+          type: "save-progress",
+          saved: Math.min(index + 5000, retained.length),
+          total: retained.length,
+        } satisfies ImportResponse);
       }
       self.postMessage({ type: "saved" } satisfies ImportResponse);
     } catch (error) {

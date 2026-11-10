@@ -9,8 +9,6 @@ import React, {
 import {
   Activity,
   Plus,
-  Sun,
-  Moon,
   Settings2,
   Search,
   Play,
@@ -39,6 +37,14 @@ import {
 import "./studio.css";
 import "./fullscreen.css";
 type Transport = "REST" | "WebSocket" | "SSE" | "File";
+type Theme = "violet" | "ocean" | "forest" | "sunset" | "rose";
+const themes: { id: Theme; label: string; color: string }[] = [
+  { id: "violet", label: "Violet", color: "#8e80ff" },
+  { id: "ocean", label: "Ocean", color: "#38a9e8" },
+  { id: "forest", label: "Forest", color: "#36b783" },
+  { id: "sunset", label: "Sunset", color: "#f29b55" },
+  { id: "rose", label: "Rose", color: "#ed7190" },
+];
 type Source = {
   id: string;
   name: string;
@@ -61,6 +67,7 @@ type FileImportMessage =
   | { type: "batch"; events: StoredEvent[] }
   | { type: "progress"; count: number }
   | { type: "imported"; count: number; retained: number }
+  | { type: "save-progress"; saved: number; total: number }
   | { type: "saved" }
   | { type: "save-error"; message: string }
   | { type: "error"; message: string };
@@ -120,17 +127,27 @@ function VirtualLogList<T>({
   empty: React.ReactNode;
 }) {
   const [scrollTop, setScrollTop] = useState(0);
-  const viewportHeight = 470;
+  const [viewportHeight, setViewportHeight] = useState(470);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const overscan = 8;
   const start = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
   const end = Math.min(
     items.length,
     Math.ceil((scrollTop + viewportHeight) / itemHeight) + overscan,
   );
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setViewportHeight(Math.round(entry.contentRect.height));
+    });
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, []);
   return (
     <div
+      ref={viewportRef}
       className="log-scroll"
-      style={{ height: viewportHeight }}
       onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
     >
       {items.length ? (
@@ -179,7 +196,7 @@ function rowsFrom(payload: unknown, s: Source): StoredEvent[] {
   });
 }
 export default function App() {
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<Theme>("violet");
   const [view, setView] = useState<View>("live");
   const [sources, setSources] = useState<Source[]>([]);
   const [events, setEvents] = useState<StoredEvent[]>([]);
@@ -210,6 +227,7 @@ export default function App() {
   const [capture, setCapture] = useState(true);
   const [notice, setNotice] = useState("Add a source to begin capturing logs.");
   const activeConnections = useRef<Map<string, () => void>>(new Map());
+  const localFileSourceIds = useRef(new Set<string>());
   const deferredSearch = useDeferredValue(search);
   const append = useCallback(
     (incoming: StoredEvent[], persist = true) => {
@@ -266,13 +284,18 @@ export default function App() {
   useEffect(() => {
     const id = setInterval(() => {
       setClock(Date.now());
-      void pruneHistory(retention, maxEvents).catch((error) =>
+      void pruneHistory(
+        retention,
+        maxEvents,
+        localFileSourceIds.current,
+      ).catch((error) =>
         setNotice(`IndexedDB pruning failed: ${String(error)}`),
       );
       setEvents((old) =>
         old
           .filter(
             (e) =>
+              localFileSourceIds.current.has(e.sourceId) ||
               e.timestamp >= Date.now() - retention * 3600000,
           )
           .slice(-maxEvents),
@@ -433,6 +456,7 @@ export default function App() {
     }
   };
   const connect = (s: Source) => {
+    if (s.transport === "File") return;
     if (s.transport === "REST") {
       const controller = new AbortController();
       let timer: ReturnType<typeof setTimeout> | undefined;
@@ -554,6 +578,7 @@ export default function App() {
       name: draft.name.trim(),
       status: draft.transport === "File" ? "Importing file" : "Connecting",
     };
+    if (s.transport === "File") localFileSourceIds.current.add(s.id);
     setLoadingSources((current) => new Set(current).add(s.id));
     setSources((prev) => [...prev, s]);
     setDialog(null);
@@ -583,6 +608,10 @@ export default function App() {
                 status: `Imported (${message.retained} events)`,
               });
               setNotice(`Saving ${message.retained} events from ${file.name}…`);
+            } else if (message.type === "save-progress") {
+              setNotice(
+                `Saving ${message.saved.toLocaleString()} of ${message.total.toLocaleString()} events from ${file.name}…`,
+              );
             } else if (message.type === "saved") {
               setNotice(
                 importedCount > retainedCount
@@ -831,33 +860,32 @@ export default function App() {
               logscope<span className="accent">.</span>
             </b>
             <small>STUDIO</small>
-            <p>Unified logs & replay</p>
           </div>
         </div>
         <div className="header-actions">
           <span className="status-dot">
             ● {sources.filter((s) => s.enabled).length} sources
           </span>
-          <div className="theme-switch">
-            <button
-              title="Dark theme"
-              aria-label="Dark theme"
-              className={theme === "dark" ? "active" : ""}
-              onClick={() => setTheme("dark")}
-            >
-              <Moon size={15} />
-            </button>
-            <button
-              title="Light theme"
-              aria-label="Light theme"
-              className={theme === "light" ? "active" : ""}
-              onClick={() => setTheme("light")}
-            >
-              <Sun size={15} />
-            </button>
+          <div className="theme-switch" aria-label="Color theme">
+            {themes.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                title={`${option.label} color mode`}
+                aria-label={`${option.label} color mode`}
+                aria-pressed={theme === option.id}
+                className={theme === option.id ? "active" : ""}
+                onClick={() => setTheme(option.id)}
+              >
+                <span
+                  className="theme-swatch"
+                  style={{ backgroundColor: option.color }}
+                />
+              </button>
+            ))}
           </div>
           <button className="primary" onClick={openAdd}>
-            <Plus size={15} /> Connect API
+            Add source
           </button>
         </div>
       </header>
